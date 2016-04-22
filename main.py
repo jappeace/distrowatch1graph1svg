@@ -18,19 +18,19 @@
 from requests import Session
 from bs4 import BeautifulSoup
 
+from sys import setrecursionlimit
+setrecursionlimit(10000)
+
 def tohtml(lines, outFile = "output.html"):
-    f = open(outFile, "w", encoding='utf8')
-    f.writelines(lines)
-    f.close()
+    with open("out/%s"%outFile, "w", encoding='utf8') as f:
+        f.writelines(lines)
 
 session = Session()
-baseurl = "https://mijn.belastingdienst.nl/"
+baseurl = "https://distrowatch.com/"
 
-print('esteblish cookies and shit')
-tohtml(
-    session.get(
-        baseurl + 'Webdiensten/action/welkom.do'
+website = session.get(
+        baseurl + 'search.php?ostype=All&category=All&origin=All&basedon=All&notbasedon=None&desktop=All&architecture=All&package=All&rolling=All&isosize=All&netinstall=All&status=All'
     ).text
-    ,
-    "get.html"
-)
+soup = BeautifulSoup(website, 'html.parser')
+
+print(soup.body.find(class_="Logo").find(class_="News").find_all("tr")[2].find("td").get_text()) # .News tr
