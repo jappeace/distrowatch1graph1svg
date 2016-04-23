@@ -1,3 +1,3 @@
 #! /bin/bash
 
-python main.py $@
+python fetchdists.py $@
