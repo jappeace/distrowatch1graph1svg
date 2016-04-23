@@ -22,7 +22,8 @@ parser = argparse.ArgumentParser(
         "Distrograph Copyright (C) 2016 Jappie Klooster\n" +
         "This program comes with ABSOLUTELY NO WARRANTY; for details see the \n" +
         "LICENSE file. This is free software, and you are welcome to \n" +
-        "redistribute it under certain conditions; see the LICENSE file for details"
+        "redistribute it under certain conditions; see the LICENSE file for details\n"+
+        "--\n"
     )
 parser.add_argument(
     '--baseurl',
@@ -64,16 +65,21 @@ searchSoup = BeautifulSoup(website, 'html.parser')
 from re import match
 def tagfilter(tag):
     return tag.name == "b" and match("[0-9]+\.", tag.text)
-print('---')
+from logging import info
+print("[")
 for distrobution in searchSoup.find_all(tagfilter):
-    print("parsing %s" % distrobution.a.text)
+    info("parsing %s" % distrobution.a.text)
     link = baseurl + distrobution.a.get("href")
     distrosoup = BeautifulSoup(session.get(link).text)
-    structure = {}
+    structure = {
+        "Name":distrobution.a.text,
+        "Link":link
+    }
     anchor = distrosoup.find('ul')
     for attribute in anchor.find_all('li'):
         # I'll be happy if this works
         name = attribute.b.extract().text
-        structure[name] = attribute.text
+        structure[name] = attribute.text[1:].replace("\n","")
     import json
-    print(json.dumps(structure, indent=4))
+    print("%s,"%json.dumps(structure, indent=4))
+print("]")
