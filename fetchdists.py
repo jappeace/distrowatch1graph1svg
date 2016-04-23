@@ -67,7 +67,8 @@ def tagfilter(tag):
     return tag.name == "b" and match("[0-9]+\.", tag.text)
 from logging import info
 print("[")
-for distrobution in searchSoup.find_all(tagfilter):
+foundDistributions = searchSoup.find_all(tagfilter)
+for distrobution in foundDistributions:
     info("parsing %s" % distrobution.a.text)
     link = baseurl + distrobution.a.get("href")
     distrosoup = BeautifulSoup(session.get(link).text)
@@ -78,8 +79,11 @@ for distrobution in searchSoup.find_all(tagfilter):
     anchor = distrosoup.find('ul')
     for attribute in anchor.find_all('li'):
         # I'll be happy if this works
-        name = attribute.b.extract().text
-        structure[name] = attribute.text[1:].replace("\n","")
+        name = attribute.b.extract().text[:-1]
+        structure[name] = attribute.text[1:].replace("\\n","")
     import json
-    print("%s,"%json.dumps(structure, indent=4))
+    comma = ","
+    if foundDistributions[-1] == distrobution:
+        comma = ""
+    print("%s%s"% (json.dumps(structure, indent=4),comma))
 print("]")

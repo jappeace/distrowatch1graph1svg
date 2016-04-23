@@ -17,5 +17,3 @@ fetchdists.py --help for details.
 ## TODO
 recognize distributions by name if based on occurs.
 create the svg result image.
-
-Fix the bug where a , is added to the last element of the fetchdists.py
