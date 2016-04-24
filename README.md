@@ -12,8 +12,14 @@ this way so I just have to fetch the json once, and then can use a file,
 this gives a huge speedup in debugging.
 * You can specify criteria that the search.php form generates. See
 fetchdists.py --help for details.
+* the graph.py program eats the output of fetchdists.py. It then transforms that
+output json into a tree structure, however while doing it it modifies the 
+dependson variables (there were some unstructured formating which is
+replaced with regexes, crude but effective). Currently this json graph could
+be used for other querring purposes in principle.
 
 
 ## TODO
-recognize distributions by name if based on occurs.
 create the svg result image.
+Add dates of inception and major releases of the distributions. (requires
+some extra screenscraping but doable)
