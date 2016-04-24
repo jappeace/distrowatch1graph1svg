@@ -44,6 +44,9 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+# TODO: not use this by choosing a propper html parser (
+# the html.parser tries to enclose every <br> element with </br>,
+# which is uneccisary and creates a huge stack. This is a workaround.
 from sys import setrecursionlimit
 setrecursionlimit(10000)
 
