@@ -152,7 +152,6 @@ def deepen(collection):
         basedstr = current[strings.based]
         bases = basedstr.split(",")
         if not findparents(current,bases,[]):
-            print("failed %s " % current[strings.name])
             counter += 1
             if counter > len(collection) * 10:
                 printjson(list(collection))
@@ -168,5 +167,4 @@ def deepen(collection):
 from collections import deque
 notindependents = deque(filter(lambda x: not x[strings.based] == strings.independend, categories))
 deepen(notindependents)
-for key,child in independents.items():
-    printjson(child)
+printjson(list(independents.items()))
