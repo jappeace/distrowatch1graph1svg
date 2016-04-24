@@ -48,12 +48,14 @@ class strings:
     name = "Name"
     children = "Children"
 import re
-regex = re.compile(".*?\((.*?)\)")
+regex = re.compile("\((.*?)\)")
 
 # They put these comments in the brackets, mostly involing no
 # longer relevant information, and it breaks the matching of parents
 def removebrackets(item):
-    item[strings.based] = regex.sub("", item[strings.based])
+    new = regex.sub("", item[strings.based])
+    item[strings.based] = new
+    item[strings.children] = []
     return item
 categories = list(map(removebrackets, categories))
 independents = filter(
@@ -67,23 +69,54 @@ def listToDict(keyFunction, values):
 # A list is just a great way to waste time for this usecase
 independents = listToDict(lambda x: x["Name"], independents)
 
+def addChildTo(parent, child):
+    parent[strings.children].append(child)
+    return parent
+
+# Recursivly find the parents. True on succes, False on failure
+# If succesfull the child will be added to the found parents.
+def findparents(child, bases, parents):
+    if len(bases) == 0:
+        for p in parents:
+            addChildTo(p, child)
+        return True
+    current = bases[0]
+    if len(parents) == 0:
+        if not current in independents:
+            current += "Linux"
+        if not current in independents:
+            # here I give up, whatever just become your own parent
+            independents[current] = {}
+            independents[current][strings.name] = current
+            independents[current][strings.based] = strings.independend
+            independents[current][strings.children] = []
+        parents.insert(0,independents[current])
+        return findparents(child, bases[1:], parents)
+    base = next(
+        (x for x in parents[0][strings.children] if x[strings.name] == current),
+        None
+    )
+    if base == None:
+        if not current in independents:
+            # the base is not added yet to the structure
+            # lets just ignore this one for now.
+            return False
+        parents.insert(0,independents[current])
+        return findparents(child, bases[1:], parents)
+    parents[0] = base
+    return findparents(child, bases[1:], parents)
 
 def deepen(collection):
-    if(len(collection) == 0):
+    if len(collection) == 0:
         return True
     current = collection[0]
     basedstr = current[strings.based]
     if "(" in basedstr:
         printjson(current)
     bases = basedstr.split(",")
-    for base in bases:
-        if base in independents:
-            parent = independents[base]
-            if not strings.children in parent:
-                parent[strings.children] = []
-            parent[strings.children].append(current)
-        else:
-            print("Ignoring %s for %s" % (base, current[strings.name]))
+    if not findparents(current,bases,[]):
+        print("Failed:")
+        printjson(current)
     return deepen(collection[1:])
 
 notindependents = list(filter(lambda x: not x[strings.based] == strings.independend, categories))
