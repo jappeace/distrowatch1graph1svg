@@ -82,16 +82,6 @@ def findparents(child, bases, parents):
         return True
     current = bases[0]
     if len(parents) == 0:
-        if not current in independents:
-            tmp = "%sLinux" % current
-            if not tmp in independents:
-                # here I give up, whatever just become your own parent
-                independents[current] = {}
-                independents[current][strings.name] = current
-                independents[current][strings.based] = strings.independend
-                independents[current][strings.children] = []
-            else:
-                current = tmp
         parents.insert(0,independents[current])
         return findparents(child, bases[1:], parents)
     base = next(
