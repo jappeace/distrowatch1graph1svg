@@ -34,6 +34,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 import json 
+def printjson(item):
+    print(json.dumps(item, indent=4))
 
 son = ''.join(args.jsonInput)
 categories = json.loads(son)
@@ -45,7 +47,15 @@ class strings:
     based = "Basedon"
     name = "Name"
     children = "Children"
+import re
+regex = re.compile(".*?\((.*?)\)")
 
+# They put these comments in the brackets, mostly involing no
+# longer relevant information, and it breaks the matching of parents
+def removebrackets(item):
+    item[strings.based] = regex.sub("", item[strings.based])
+    return item
+categories = list(map(removebrackets, categories))
 independents = filter(
     lambda x: x[strings.based] == strings.independend,
     categories
@@ -57,11 +67,15 @@ def listToDict(keyFunction, values):
 # A list is just a great way to waste time for this usecase
 independents = listToDict(lambda x: x["Name"], independents)
 
+
 def deepen(collection):
     if(len(collection) == 0):
         return True
     current = collection[0]
-    bases = current[strings.based].split(",")
+    basedstr = current[strings.based]
+    if "(" in basedstr:
+        printjson(current)
+    bases = basedstr.split(",")
     for base in bases:
         if base in independents:
             parent = independents[base]
@@ -73,8 +87,6 @@ def deepen(collection):
     return deepen(collection[1:])
 
 notindependents = list(filter(lambda x: not x[strings.based] == strings.independend, categories))
-def printjson(item):
-    print(json.dumps(item, indent=4))
-deepen(notindependents )
+deepen(notindependents)
 for key,child in independents.items():
     printjson(child)
