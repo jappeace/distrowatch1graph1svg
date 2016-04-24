@@ -83,13 +83,15 @@ def findparents(child, bases, parents):
     current = bases[0]
     if len(parents) == 0:
         if not current in independents:
-            current += "Linux"
-        if not current in independents:
-            # here I give up, whatever just become your own parent
-            independents[current] = {}
-            independents[current][strings.name] = current
-            independents[current][strings.based] = strings.independend
-            independents[current][strings.children] = []
+            tmp = "%sLinux" % current
+            if not tmp in independents:
+                # here I give up, whatever just become your own parent
+                independents[current] = {}
+                independents[current][strings.name] = current
+                independents[current][strings.based] = strings.independend
+                independents[current][strings.children] = []
+            else:
+                current = tmp
         parents.insert(0,independents[current])
         return findparents(child, bases[1:], parents)
     base = next(
@@ -107,19 +109,26 @@ def findparents(child, bases, parents):
     return findparents(child, bases[1:], parents)
 
 def deepen(collection):
-    if len(collection) == 0:
-        return True
-    current = collection[0]
-    basedstr = current[strings.based]
-    if "(" in basedstr:
-        printjson(current)
-    bases = basedstr.split(",")
-    if not findparents(current,bases,[]):
-        print("Failed:")
-        printjson(current)
-    return deepen(collection[1:])
+    counter = 0
+    while len(collection) > 0:
+        current = collection[0]
+        basedstr = current[strings.based]
+        bases = basedstr.split(",")
+        if not findparents(current,bases,[]):
+            print("failed %s " % current[strings.name])
+            counter += 1
+            if counter > len(collection):
+                printjson(list(collection))
+                raise Exception("this takes to long")
+            collection.append(current)
+        else:
+            counter = 0
+        collection.popleft()
+    return collection
 
-notindependents = list(filter(lambda x: not x[strings.based] == strings.independend, categories))
+from collections import deque
+notindependents = deque(filter(lambda x: not x[strings.based] == strings.independend, categories))
 deepen(notindependents)
 for key,child in independents.items():
-    printjson(child)
+    pass
+    #printjson(child)
