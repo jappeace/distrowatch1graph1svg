@@ -40,20 +40,60 @@ def printjson(item):
 son = ''.join(args.jsonInput)
 categories = json.loads(son)
 
-# using a lot of strings from te JSON strucutre,
-# better group them in a structure
-class strings:
-    independend = "Independent"
-    based = "Basedon"
-    name = "Name"
-    children = "Children"
+import strings
 import re
-regex = re.compile("\((.*?)\)")
+datafixes = [
+    (re.compile("\((.*?)\)"), ""), # remove brackets with details
+
+    #spelling
+    (re.compile("^indpendent$"), strings.independend),
+    (re.compile("^indpenendent$"), strings.independend),
+
+    # fixes origin paths
+    # way more easy than a proper detection.
+    (re.compile("^redhat"), "fedora,redhat"),
+    (re.compile("^centos$"), "fedora,redhat,centos"),
+    (re.compile("^fedora,centos$"), "fedora,redhat,centos"),
+    (re.compile("^trustix$"), "fedora,trustix"),
+    (re.compile("^asianux,fedora$"), "fedora,redhat,asianux"),
+    (re.compile("^fedora,redhat,trustix$"), "fedora,redhat,fedora,trustix"),
+
+    (re.compile("^thinstation$"), "crux,thinstation"),
+    (re.compile("^manjaro$"), "arch,manjaro"),
+    (re.compile("^peanut$"), "alinux"),
+    (re.compile("^caldera$"), "sco"),
+    (re.compile("^vectorlinux$"), "slackware,vector"),
+
+    (re.compile("^opensolaris,solaris$"), "solaris,opensolaris"),
+    (re.compile("^opensolaris$"), "solaris,opensolaris"),
+
+    (re.compile("^ubuntu$"), "debian,ubuntu"),
+    (re.compile("^damnsmall$"), "debian,knoppix,damnsmall"),
+    (re.compile("^debian,damnsmall$"), "debian,knoppix,damnsmall"),
+    (re.compile("^debian,freeduc$"), "debian,knoppix,freeduc"),
+    (re.compile("^debian,feather$"), "debian,knoppix,damnsmall,feather"),
+    (re.compile("^debian,sidux$"), "debian,aptosid"), #rename
+    #misses ubuntu
+    (re.compile("^debian,kurumin$"), "debian,ubuntu,kurumin"),
+    (re.compile("debian,kubuntu"), "debian,ubuntu,kubuntu"),
+    (re.compile("^debian,xubuntu$"), "debian,ubuntu,xubuntu"),
+    (re.compile("^debian,mint$"), "debian,ubuntu,mint"),
+    (re.compile("^debian,lubuntu$"), "debian,ubuntu,lubuntu"),
+    (re.compile("^debian,linspire$"), "debian,ubuntu,linspire"),
+    # debian clusterfuck
+    (re.compile("^debian,ubuntu,knoppix$"), "debian,ubuntu,debian,knoppix"),
+
+    # distrowatch didn't want to put up with the numbers
+    (re.compile("m0n0wall"), "monowall"),
+]
 
 # They put these comments in the brackets, mostly involing no
 # longer relevant information, and it breaks the matching of parents
 def removebrackets(item):
-    new = regex.sub("", item[strings.based])
+    new = item[strings.based].lower()
+    # for god sakes get your dependencies straight
+    for fix in datafixes:
+        new = fix[0].sub(fix[1], new)
     item[strings.based] = new
     item[strings.children] = []
     return item
@@ -82,7 +122,11 @@ def findparents(child, bases, parents):
         return True
     current = bases[0]
     if len(parents) == 0:
-        parents.insert(0,independents[current])
+        try:
+            parents.insert(0,independents[current])
+        except KeyError as e:
+            printjson(child)
+            raise e
         return findparents(child, bases[1:], parents)
     base = next(
         (x for x in parents[0][strings.children] if x[strings.name] == current),
@@ -90,6 +134,9 @@ def findparents(child, bases, parents):
     )
     if base == None:
         if not current in independents:
+            if current == child[strings.name]:
+                # ubuntu dependson ubuntu... yes distrowatch thats just bullshit
+                return findparents(child,[], parents)
             # the base is not added yet to the structure
             # lets just ignore this one for now.
             return False
@@ -107,9 +154,11 @@ def deepen(collection):
         if not findparents(current,bases,[]):
             print("failed %s " % current[strings.name])
             counter += 1
-            if counter > len(collection):
+            if counter > len(collection) * 10:
                 printjson(list(collection))
-                raise Exception("this takes to long")
+                raise Exception(
+                    "Made five full circles in the deque, the data is just invalid, deque size %i " % counter
+                )
             collection.append(current)
         else:
             counter = 0
@@ -120,5 +169,4 @@ from collections import deque
 notindependents = deque(filter(lambda x: not x[strings.based] == strings.independend, categories))
 deepen(notindependents)
 for key,child in independents.items():
-    pass
-    #printjson(child)
+    printjson(child)

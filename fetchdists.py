@@ -69,14 +69,29 @@ from re import match
 def tagfilter(tag):
     return tag.name == "b" and match("[0-9]+\.", tag.text)
 from logging import info
+def jsondumps(item):
+    import json
+    return json.dumps(item, indent=4)
+import strings
 print("[")
+# some missing root elements
+godfathers = [
+    "android"
+]
+for godfather in godfathers:
+    print(jsondumps({
+        strings.name:godfather,
+        strings.based:strings.independend
+    })+",")
+
 foundDistributions = searchSoup.find_all(tagfilter)
 for distrobution in foundDistributions:
     info("parsing %s" % distrobution.a.text)
     link = baseurl + distrobution.a.get("href")
     distrosoup = BeautifulSoup(session.get(link).text)
     structure = {
-        "Name":distrobution.a.text,
+        strings.name:distrobution.a.get("href"),
+        "Human Name":distrobution.a.text,
         "Link":link
     }
     anchor = distrosoup.find('ul')
@@ -84,9 +99,9 @@ for distrobution in foundDistributions:
         # I'll be happy if this works
         name = attribute.b.extract().text[:-1]
         structure[name] = attribute.text[1:].replace("\\n","")
-    import json
     comma = ","
     if foundDistributions[-1] == distrobution:
         comma = ""
-    print("%s%s"% (json.dumps(structure, indent=4),comma))
+    print("%s%s"% (jsondumps(structure),comma))
+
 print("]")
