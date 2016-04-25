@@ -167,4 +167,4 @@ def deepen(collection):
 from collections import deque
 notindependents = deque(filter(lambda x: not x[strings.based] == strings.independend, categories))
 deepen(notindependents)
-printjson(list(independents.items()))
+printjson(list(map(lambda item: item[1], independents.items())))
