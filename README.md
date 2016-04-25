@@ -23,3 +23,10 @@ be used for other querring purposes in principle.
 create the svg result image.
 Add dates of inception and major releases of the distributions. (requires
 some extra screenscraping but doable)
+
+# How to help
+Feel free to use this code according to the GNU license.
+You can use the github interface for creating pull requests,
+alternativly I also accept patches.
+
+Please sponser either distrowatch or gnuclad.
