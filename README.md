@@ -17,12 +17,17 @@ output json into a tree structure, however while doing it it modifies the
 dependson variables (there were some unstructured formating which is
 replaced with regexes, crude but effective). Currently this json graph could
 be used for other querring purposes in principle.
+* The svg.py program creates a csv output from the graph.py programs output.
+* gnu clad should eat the csv output to create the final svg.
 
-
-## TODO
-create the svg result image.
-Add dates of inception and major releases of the distributions. (requires
-some extra screenscraping but doable)
+I'm thinking about recreating the entire svg rendering in python and circumventing
+gnu clad, because gnuclad is written in C (or C++, I didn't check).
+(also the gnu clad project seems dead-ish and I want to add some features, such
+as small figures for each release. This is difficult to feed to gnu clad in
+csv format so I think its easier to just look at their source and reimplement
+it in python. We share the same license so it shouldn't be a problem), although
+looking at all the config options now I know that I won't be doing that any
+time soon.
 
 # How to help
 Feel free to use this code according to the GNU license.
