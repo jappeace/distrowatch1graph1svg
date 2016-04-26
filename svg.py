@@ -38,7 +38,7 @@ def printjson(item):
     print(json.dumps(item, indent=4))
 
 def csv(name,color,parent,start,stop,icon,description):
-    return "\"N\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"" % (name,color,parent,start,stop,icon,description)
+    return "\"N\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n" % (name,color,parent,start,stop,icon,description)
 def toCSV(distributions, parent):
     def sortDates(datearray):
         return list(
@@ -49,24 +49,33 @@ def toCSV(distributions, parent):
                 )
             )
         )
+    from datetime import datetime, MAXYEAR
+    lowestStartdate = datetime(MAXYEAR,1,1)
+    result = ""
     for distro in distributions:
         import strings
-        from datetime import datetime
         dates = sortDates(distro[strings.dates])
         enddate = ""
         dateformat = "%Y.%m.%d"
         if not distro[strings.status] == strings.active:
             enddate = dates[-1].strftime(dateformat)
 
+        retuple = toCSV(distro[strings.children],distro[strings.name])
         startdate = dates[0]
-        parentName = ""
-        if not parent == None:
-            parentName = parent[strings.name]
-            parentstartdate = sortDates(parent[strings.dates])[0]
-            if startdate < parentstartdate:
-                startdate = parentstartdate
-        print(csv(distro[strings.name], "#f00", parentName, startdate.strftime(dateformat),enddate,"",""))
-        toCSV(distro[strings.children],distro)
+        if retuple.lowestStartdate < startdate:
+            startdate = retuple.lowestStartdate
+        if startdate < lowestStartdate:
+            lowestStartdate = startdate
+        result += retuple.result +csv(
+            distro[strings.name],
+            "#f00",
+            parent,
+            startdate.strftime(dateformat),
+            enddate,"",""
+        )
+    from collections import namedtuple
+    retuple = namedtuple('Retuple', ['result', 'lowestStartdate'])
+    return retuple(result, lowestStartdate)
 
-toCSV(json.loads(''.join(args.graphInput)), None)
+print(toCSV(json.loads(''.join(args.graphInput)), "").result)
 
