@@ -37,8 +37,12 @@ import json
 def printjson(item):
     print(json.dumps(item, indent=4))
 
-def csv(name,color,parent,start,stop,icon,description):
+def csv(name,parent,start,stop,icon,description):
+    import random
+    r = lambda: random.randint(0,255)
+    color = '#%02X%02X%02X' % (r(),r(),r())
     return "\"N\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n" % (name,color,parent,start,stop,icon,description)
+
 def toCSV(distributions, parent):
     def sortDates(datearray):
         return list(
@@ -68,7 +72,6 @@ def toCSV(distributions, parent):
             lowestStartdate = startdate
         result += retuple.result +csv(
             distro[strings.name],
-            "#f00",
             parent,
             startdate.strftime(dateformat),
             enddate,"",""
