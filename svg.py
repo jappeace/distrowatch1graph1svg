@@ -40,10 +40,33 @@ def printjson(item):
 def csv(name,color,parent,start,stop,icon,description):
     return "\"N\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"" % (name,color,parent,start,stop,icon,description)
 def toCSV(distributions, parent):
+    def sortDates(datearray):
+        return list(
+            sorted(
+                map(
+                    lambda x: datetime.strptime(x,"%Y-%m-%d"),
+                    datearray
+                )
+            )
+        )
     for distro in distributions:
         import strings
-        print(csv(distro[strings.name], "#f00", parent, "2002.1","","",""))
-        toCSV(distro[strings.children],distro[strings.name])
+        from datetime import datetime
+        dates = sortDates(distro[strings.dates])
+        enddate = ""
+        dateformat = "%Y.%m.%d"
+        if not distro[strings.status] == strings.active:
+            enddate = dates[-1].strftime(dateformat)
 
-toCSV(json.loads(''.join(args.graphInput)),"")
+        startdate = dates[0]
+        parentName = ""
+        if not parent == None:
+            parentName = parent[strings.name]
+            parentstartdate = sortDates(parent[strings.dates])[0]
+            if startdate < parentstartdate:
+                startdate = parentstartdate
+        print(csv(distro[strings.name], "#f00", parentName, startdate.strftime(dateformat),enddate,"",""))
+        toCSV(distro[strings.children],distro)
+
+toCSV(json.loads(''.join(args.graphInput)), None)
 

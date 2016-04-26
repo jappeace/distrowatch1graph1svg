@@ -76,12 +76,14 @@ import strings
 print("[")
 # some missing root elements
 godfathers = [
-    "android"
+    ["android", "2008-10-23"]
 ]
 for godfather in godfathers:
     print(jsondumps({
-        strings.name:godfather,
-        strings.based:strings.independend
+        strings.name:godfather[0],
+        strings.based:strings.independend,
+        strings.dates:[godfather[1]],
+        strings.status:strings.active
     })+",")
 
 foundDistributions = searchSoup.find_all(tagfilter)
@@ -100,6 +102,18 @@ for distrobution in foundDistributions:
         name = attribute.b.extract().text[:-1]
         structure[name] = attribute.text[1:].replace("\\n","")
     comma = ","
+
+    #find all dates and do some data sanitation if neccisarry
+    def sanatizeDate(element):
+        date = element.text
+        if not "-" in date:
+            date += "-XX-XX" # note this already exist in distrowatch input
+        return date.replace("XX","01")
+
+    structure[strings.dates] = list(map(
+        sanatizeDate,
+        distrosoup.find_all("td",class_="Date")
+    ))
     if foundDistributions[-1] == distrobution:
         comma = ""
     print("%s%s"% (jsondumps(structure),comma))
