@@ -1,5 +1,7 @@
-# using a lot of strings from te JSON strucutre,
-# better group them in a structure
+"""
+using a lot of strings from te JSON strucutre,
+better group them together somewhere
+"""
 independend = "independent"
 based = "Based on"
 name = "Name"

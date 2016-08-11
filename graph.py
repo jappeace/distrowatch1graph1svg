@@ -14,72 +14,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This file makes a graph from the data structure
+this is mostly usefull to make sure the structure of the collected data is
+sound, We expect a tree (mostly, maybe some code sharings but that's not
+implemented now)
+"""
+
 import json 
 import strings
-import re
+from correct import fixrelations, correct
 
-datafixes = [
-    (re.compile("\((.*?)\)"), ""), # remove brackets with details
-
-    #spelling
-    (re.compile("^$"), strings.independend),
-    (re.compile("^indpendent$"), strings.independend),
-    (re.compile("^indpenendent$"), strings.independend),
-
-    # fixes origin paths
-    # way more easy than a proper detection.
-    (re.compile("^redhat"), "fedora,redhat"),
-    (re.compile("^centos$"), "fedora,redhat,centos"),
-    (re.compile("^fedora,centos$"), "fedora,redhat,centos"),
-    (re.compile("^trustix$"), "fedora,trustix"),
-    (re.compile("^asianux,fedora$"), "fedora,redhat,asianux"),
-    (re.compile("^fedora,redhat,trustix$"), "fedora,redhat,fedora,trustix"),
-
-    (re.compile("^thinstation$"), "crux,thinstation"),
-    (re.compile("^manjaro$"), "arch,manjaro"),
-    (re.compile("^peanut$"), "alinux"),
-    (re.compile("^caldera$"), "sco"),
-    (re.compile("^vectorlinux$"), "slackware,vector"),
-
-    (re.compile("^opensolaris,solaris$"), "solaris,opensolaris"),
-    (re.compile("^opensolaris$"), "solaris,opensolaris"),
-
-    (re.compile("^ubuntu$"), "debian,ubuntu"),
-    (re.compile("^damnsmall$"), "debian,knoppix,damnsmall"),
-    (re.compile("^debian,damnsmall$"), "debian,knoppix,damnsmall"),
-    (re.compile("^debian,freeduc$"), "debian,knoppix,freeduc"),
-    (re.compile("^debian,feather$"), "debian,knoppix,damnsmall,feather"),
-    (re.compile("^debian,sidux$"), "debian,aptosid"), #rename
-    #misses ubuntu
-    (re.compile("^debian,kurumin$"), "debian,ubuntu,kurumin"),
-    (re.compile("debian,kubuntu"), "debian,ubuntu,kubuntu"),
-    (re.compile("^debian,xubuntu$"), "debian,ubuntu,xubuntu"),
-    (re.compile("^debian,mint$"), "debian,ubuntu,mint"),
-    (re.compile("^debian,lubuntu$"), "debian,ubuntu,lubuntu"),
-    (re.compile("^debian,linspire$"), "debian,ubuntu,linspire"),
-    # debian clusterfuck
-    (re.compile("^debian,ubuntu,knoppix$"), "debian,ubuntu,debian,knoppix"),
-
-    # distrowatch didn't want to put up with the numbers
-    (re.compile("m0n0wall"), "monowall"),
-]
 def to_graph(son):
     def dumps(item):
         return json.dumps(item, indent=4)
     def printjson(item):
         print(dumps(item))
     categories = json.loads(son)
-    # They put these comments in the brackets, mostly involing no
-    # longer relevant information, and it breaks the matching of parents
-    def removebrackets(item):
-        new = item[strings.based].lower().replace(" ", "")
-        # for god sakes get your dependencies straight
-        for fix in datafixes:
-            new = fix[0].sub(fix[1], new)
-        item[strings.based] = new
-        item[strings.children] = []
-        return item
-    categories = list(map(removebrackets, categories))
+    categories = [correct(fixrelations(i)) for i in categories]
     independents = filter(
         lambda x: x[strings.based] == strings.independend,
         categories

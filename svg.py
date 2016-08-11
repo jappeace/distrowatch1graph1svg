@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This file flattens the graph back into a csv structure
+""" 
+
 def csv(name,parent,start,stop,icon,description):
     import random
     r = lambda: random.randint(0,255)

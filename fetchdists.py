@@ -14,6 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This file does the data collection from distrowatch (or any other site with
+a similar html structure)
+""" 
+
 def fetch_dist_list_from(baseurl, search_options):
     # TODO: not use this by choosing a propper html parser (
     # the html.parser tries to enclose every <br> element with </br>,

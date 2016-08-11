@@ -14,6 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This file glues the program together, it'll also try to execute gnuclad
+and inkscape for the png once finished. Once fetching the distro's has been
+completed they'll be cached in out, delete that file to re-download
+"""
+
 from fetchdists import fetch_dist_list_from
 from graph import to_graph
 from svg import toCSV
@@ -77,5 +83,5 @@ print("writing csv to %s/%s" % (outputdir, csvfile))
 with open(csvfile, "w") as cached:
     cached.write(csv)
 os.chdir("../")
-call("gnuclad %s/%s %s" % (outputdir, csvfile, "SVG"), shell=True)
+call("gnuclad %s/%s dists.svg gnuclad.conf" % (outputdir, csvfile ), shell=True)
 call("inkscape -z -e dists.png dists.svg", shell=True)
