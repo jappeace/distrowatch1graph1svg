@@ -2,7 +2,7 @@
 
 from this graph a nice svg image is created.
 
-![The example timeline](https://commons.wikimedia.org/wiki/File:Linux_landscape_2016_II_(and_bsd%27s).png "Example result")
+[The example timeline](https://commons.wikimedia.org/wiki/File:Linux_landscape_2016_II_(and_bsd%27s).png)
 
 Note that you can use the search form from Distrowatch to create a more constraint
 variant (for example if you're only interested in Linux or the Debian family,
