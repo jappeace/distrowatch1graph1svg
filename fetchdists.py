@@ -14,108 +14,80 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>.
 
+def fetch_dist_list_from(baseurl, search_options):
+    # TODO: not use this by choosing a propper html parser (
+    # the html.parser tries to enclose every <br> element with </br>,
+    # which is uneccisary and creates a huge stack. This is a workaround.
+    from sys import setrecursionlimit
+    setrecursionlimit(10000)
 
+    # for debugging...
+    def tohtml(lines, outFile = "output.html"):
+        with open("out/%s"%outFile, "w", encoding='utf8') as f:
+            f.writelines(lines)
 
-import argparse
-parser = argparse.ArgumentParser(
-    description=
-        "Distrograph Copyright (C) 2016 Jappie Klooster\n" +
-        "This program comes with ABSOLUTELY NO WARRANTY; for details see the \n" +
-        "LICENSE file. This is free software, and you are welcome to \n" +
-        "redistribute it under certain conditions; see the LICENSE file for details\n"+
-        "--\n"
-    )
-parser.add_argument(
-    '--baseurl',
-    default="https://distrowatch.com/",
-    help="default http://distrowatch.com"
-)
-parser.add_argument(
-    '--searchOptions',
-    default="ostype=All&category=All&origin=All&basedon=All&notbasedon=None"+
-    "&desktop=All&architecture=All&package=All&rolling=All&isosize=All"+
-    "&netinstall=All&status=All",
-    help="the GET form generates this at distrowatch.com/search.php,"+
-    "everything behind the ? can be put in here, "+
-    "use this to add constraints to your graph, for example if you're "+
-    "only interested in active distro's, specify it at the form and copy "+
-    "the resulting GET request in this argument"
-)
+    from requests import Session
+    from bs4 import BeautifulSoup
+    session = Session()
+    website = session.get('%s/search.php?%s' % (baseurl, search_options)).text
+    searchSoup = BeautifulSoup(website, 'html.parser')
 
-args = parser.parse_args()
+    from re import match
+    def tagfilter(tag):
+        return tag.name == "b" and match("[0-9]+\.", tag.text)
+    from logging import info
+    def jsondumps(item):
+        import json
+        return json.dumps(item, indent=4)
+    import strings
 
-# TODO: not use this by choosing a propper html parser (
-# the html.parser tries to enclose every <br> element with </br>,
-# which is uneccisary and creates a huge stack. This is a workaround.
-from sys import setrecursionlimit
-setrecursionlimit(10000)
+    result = "["
+    # some missing root elements
+    godfathers = [
+        ["android", "2008-10-23"]
+    ]
+    for godfather in godfathers:
+        result += jsondumps({
+            strings.name:godfather[0],
+            strings.based:strings.independend,
+            strings.dates:[godfather[1]],
+            strings.status:strings.active
+        })+","
 
-# for debugging...
-def tohtml(lines, outFile = "output.html"):
-    with open("out/%s"%outFile, "w", encoding='utf8') as f:
-        f.writelines(lines)
+    foundDistributions = searchSoup.find_all(tagfilter)
+    for distrobution in foundDistributions:
+        print("downloading and parsing %s" % distrobution.a.text)
+        aname = distrobution.a.get("href")
+        hname =distrobution.a.text 
+        aname = hname.split(' ')[0].lower() if aname == '' else aname
+        link = "%s/%s" % (baseurl, aname)
+        distrosoup = BeautifulSoup(session.get(link).text)
+        structure = {
+            strings.name:aname,
+            "Human Name":hname ,
+            "Link":link
+        }
+        anchor = distrosoup.find('ul')
+        print(structure)
+        for attribute in anchor.find_all('li'):
+            # I'll be happy if this works
+            print(attribute)
+            name = attribute.b.extract().text[:-1]
+            structure[name] = attribute.text[1:].replace("\\n","")
+        comma = ","
 
-from requests import Session
-from bs4 import BeautifulSoup
-session = Session()
-baseurl = args.baseurl
+        #find all dates and do some data sanitation if neccisarry
+        def sanatizeDate(element):
+            date = element.text
+            if not "-" in date:
+                date += "-XX-XX" # note this already exist in distrowatch input
+            return date.replace("XX","01")
 
-website = session.get(
-        baseurl + 'search.php?%s' % args.searchOptions
-    ).text
-searchSoup = BeautifulSoup(website, 'html.parser')
-
-from re import match
-def tagfilter(tag):
-    return tag.name == "b" and match("[0-9]+\.", tag.text)
-from logging import info
-def jsondumps(item):
-    import json
-    return json.dumps(item, indent=4)
-import strings
-print("[")
-# some missing root elements
-godfathers = [
-    ["android", "2008-10-23"]
-]
-for godfather in godfathers:
-    print(jsondumps({
-        strings.name:godfather[0],
-        strings.based:strings.independend,
-        strings.dates:[godfather[1]],
-        strings.status:strings.active
-    })+",")
-
-foundDistributions = searchSoup.find_all(tagfilter)
-for distrobution in foundDistributions:
-    info("parsing %s" % distrobution.a.text)
-    link = baseurl + distrobution.a.get("href")
-    distrosoup = BeautifulSoup(session.get(link).text)
-    structure = {
-        strings.name:distrobution.a.get("href"),
-        "Human Name":distrobution.a.text,
-        "Link":link
-    }
-    anchor = distrosoup.find('ul')
-    for attribute in anchor.find_all('li'):
-        # I'll be happy if this works
-        name = attribute.b.extract().text[:-1]
-        structure[name] = attribute.text[1:].replace("\\n","")
-    comma = ","
-
-    #find all dates and do some data sanitation if neccisarry
-    def sanatizeDate(element):
-        date = element.text
-        if not "-" in date:
-            date += "-XX-XX" # note this already exist in distrowatch input
-        return date.replace("XX","01")
-
-    structure[strings.dates] = list(map(
-        sanatizeDate,
-        distrosoup.find_all("td",class_="Date")
-    ))
-    if foundDistributions[-1] == distrobution:
-        comma = ""
-    print("%s%s"% (jsondumps(structure),comma))
-
-print("]")
+        structure[strings.dates] = list(map(
+            sanatizeDate,
+            distrosoup.find_all("td",class_="Date")
+        ))
+        if foundDistributions[-1] == distrobution:
+            comma = ""
+        result += "%s%s"% (jsondumps(structure),comma)
+    return result + "]"

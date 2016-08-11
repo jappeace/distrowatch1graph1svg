@@ -3,6 +3,8 @@
 *.aux
 *.log
 *.pdf
+*.svg
+*.png
 out
 
 __pycache__

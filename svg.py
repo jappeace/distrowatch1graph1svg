@@ -14,29 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>.
 
-
-
-import argparse
-parser = argparse.ArgumentParser(
-    description=
-        "Distrograph Copyright (C) 2016 Jappie Klooster\n" +
-        "This program comes with ABSOLUTELY NO WARRANTY; for details see the \n" +
-        "LICENSE file. This is free software, and you are welcome to \n" +
-        "redistribute it under certain conditions; see the LICENSE file for details\n"+
-        "--\n"
-    )
-parser.add_argument(
-    'graphInput',
-    nargs='+',
-    help="The structured json from graph.py"
-)
-
-args = parser.parse_args()
-
-import json 
-def printjson(item):
-    print(json.dumps(item, indent=4))
-
 def csv(name,parent,start,stop,icon,description):
     import random
     r = lambda: random.randint(0,255)
@@ -79,6 +56,3 @@ def toCSV(distributions, parent):
     from collections import namedtuple
     retuple = namedtuple('Retuple', ['result', 'lowestStartdate'])
     return retuple(result, lowestStartdate)
-
-print(toCSV(json.loads(''.join(args.graphInput)), "").result)
-
