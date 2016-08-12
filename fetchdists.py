@@ -18,33 +18,61 @@
 This file does the data collection from distrowatch (or any other site with
 a similar html structure)
 """ 
+import strings
+
+from requests import Session
+from bs4 import BeautifulSoup
+from re import match
+def jsondumps(item):
+    import json
+    return json.dumps(item, indent=4)
+
+
+def fetch_details(arguments):
+    (baseurl, distrobution) = arguments
+    distrobution = BeautifulSoup(distrobution)
+    session = Session()
+    print("downloading and parsing %s" % distrobution.a.text)
+    aname = distrobution.a.get("href")
+    hname =distrobution.a.text 
+    aname = hname.split(' ')[0].lower() if aname == '' else aname
+    link = "%s/%s" % (baseurl, aname)
+    distrosoup = BeautifulSoup(session.get(link).text)
+    structure = {
+        strings.name:aname,
+        "Human Name":hname ,
+        "Link":link
+    }
+    anchor = distrosoup.find('ul')
+    for attribute in anchor.find_all('li'):
+        # I'll be happy if this works
+        name = attribute.b.extract().text[:-1]
+        structure[name] = attribute.text[1:].replace("\\n","")
+    #find all dates and do some data sanitation if neccisarry
+    def sanatizeDate(element):
+        date = element.text
+        if not "-" in date:
+            date += "-XX-XX" # note this already exist in distrowatch input
+        return date.replace("XX","01")
+
+    structure[strings.dates] = list(map(
+        sanatizeDate,
+        distrosoup.find_all("td",class_="Date")
+    ))
+    return jsondumps(structure)
 
 def fetch_dist_list_from(baseurl, search_options):
-    # TODO: not use this by choosing a propper html parser (
-    # the html.parser tries to enclose every <br> element with </br>,
-    # which is uneccisary and creates a huge stack. This is a workaround.
-    from sys import setrecursionlimit
-    setrecursionlimit(10000)
-
     # for debugging...
     def tohtml(lines, outFile = "output.html"):
         with open("out/%s"%outFile, "w", encoding='utf8') as f:
             f.writelines(lines)
 
-    from requests import Session
-    from bs4 import BeautifulSoup
     session = Session()
     website = session.get('%s/search.php?%s' % (baseurl, search_options)).text
-    searchSoup = BeautifulSoup(website, 'html.parser')
+    searchSoup = BeautifulSoup(website)
 
-    from re import match
     def tagfilter(tag):
         return tag.name == "b" and match("[0-9]+\.", tag.text)
-    from logging import info
-    def jsondumps(item):
-        import json
-        return json.dumps(item, indent=4)
-    import strings
 
     result = "["
     # some missing root elements
@@ -59,40 +87,11 @@ def fetch_dist_list_from(baseurl, search_options):
             strings.status:strings.active
         })+","
 
+    from multiprocessing import Pool
+    pool = Pool(16) # sub interpreters to use
     foundDistributions = searchSoup.find_all(tagfilter)
-    for distrobution in foundDistributions:
-        print("downloading and parsing %s" % distrobution.a.text)
-        aname = distrobution.a.get("href")
-        hname =distrobution.a.text 
-        aname = hname.split(' ')[0].lower() if aname == '' else aname
-        link = "%s/%s" % (baseurl, aname)
-        distrosoup = BeautifulSoup(session.get(link).text)
-        structure = {
-            strings.name:aname,
-            "Human Name":hname ,
-            "Link":link
-        }
-        anchor = distrosoup.find('ul')
-        print(structure)
-        for attribute in anchor.find_all('li'):
-            # I'll be happy if this works
-            print(attribute)
-            name = attribute.b.extract().text[:-1]
-            structure[name] = attribute.text[1:].replace("\\n","")
-        comma = ","
-
-        #find all dates and do some data sanitation if neccisarry
-        def sanatizeDate(element):
-            date = element.text
-            if not "-" in date:
-                date += "-XX-XX" # note this already exist in distrowatch input
-            return date.replace("XX","01")
-
-        structure[strings.dates] = list(map(
-            sanatizeDate,
-            distrosoup.find_all("td",class_="Date")
-        ))
-        if foundDistributions[-1] == distrobution:
-            comma = ""
-        result += "%s%s"% (jsondumps(structure),comma)
+    result += ",".join(pool.map(
+        fetch_details,
+        zip([baseurl for x in foundDistributions], [str(x) for x in foundDistributions])
+    ))
     return result + "]"
