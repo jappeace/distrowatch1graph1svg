@@ -22,7 +22,9 @@ def csv(name,parent,start,stop,icon,description):
     import random
     r = lambda: random.randint(0,255)
     color = '#%02X%02X%02X' % (r(),r(),r())
-    return "\"N\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n" % (name,color,parent,start,stop,icon,description)
+    return "\"N\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n" % (
+        name,color,parent,start,stop,icon,description
+    )
 
 def toCSV(distributions, parent):
     def sortDates(datearray):
@@ -55,7 +57,9 @@ def toCSV(distributions, parent):
             distro[strings.name],
             parent,
             startdate.strftime(dateformat),
-            enddate,"",""
+            enddate,
+            distro[strings.image] if len(distro[strings.children]) > 1 else ""
+            ,""
         )
     from collections import namedtuple
     retuple = namedtuple('Retuple', ['result', 'lowestStartdate'])

@@ -23,15 +23,24 @@ import strings
 from requests import Session
 from bs4 import BeautifulSoup
 from re import match
+from shutil import copyfileobj
 def jsondumps(item):
     import json
     return json.dumps(item, indent=4)
 
 
 def fetch_details(arguments):
+    """
+    Fetch the details of a distrobution, can be executed as a seperate 
+    process, IO bound and blocking.
+    """
     (baseurl, distrobution) = arguments
+
+    # since this is subprocess space we want to reconstruct these based on
+    # the passed primitives
     distrobution = BeautifulSoup(distrobution)
     session = Session()
+
     print("downloading and parsing %s" % distrobution.a.text)
     aname = distrobution.a.get("href")
     hname =distrobution.a.text 
@@ -59,6 +68,15 @@ def fetch_details(arguments):
         sanatizeDate,
         distrosoup.find_all("td",class_="Date")
     ))
+
+    url = "%s/%s" % (baseurl, anchor.parent.find_all('img')[-1]['src'])
+    print("using image: %s" % url)
+    image = session.get(url, stream=True)
+    image_name = "%s.png" % aname
+    with open(image_name, 'wb') as ifile:
+        image.raw.decode_content = True
+        copyfileobj(image.raw, ifile)
+    structure[strings.image] = image_name
     return jsondumps(structure)
 
 def fetch_dist_list_from(baseurl, search_options):
@@ -84,11 +102,12 @@ def fetch_dist_list_from(baseurl, search_options):
             strings.name:godfather[0],
             strings.based:strings.independend,
             strings.dates:[godfather[1]],
-            strings.status:strings.active
+            strings.status:strings.active,
+            strings.image:""
         })+","
 
     from multiprocessing import Pool
-    pool = Pool(16) # sub interpreters to use
+    pool = Pool(8) # sub interpreters to use
     foundDistributions = searchSoup.find_all(tagfilter)
     result += ",".join(pool.map(
         fetch_details,
