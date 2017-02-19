@@ -36,15 +36,15 @@ looking at all the config options now I know that I won't be doing that any
 time soon.
 
 # Todo
+* Combine data from the found archive with the scraped data
 * Add the images from the original.
-* Maybe add automatically the logos in the circles, I think this should be
-possible with some extra screenscraping (distrowatch already collects the logos)
 * Add domain support (backgrounds for example for debian)
 * Add some sort of combine mechanism to supplement data from distrowatch (for example
-for android, since distrowatch ignores that for some reason)
-* Preferably I would let svg.py do all the rendering, but that's a pipe dream for now.
+	for android, since distrowatch ignores that for some reason)
 * Code sharing support? (the original had this but I didn't think it was that
 usefull honestly)
+* Create a custom renderer in html/css/js rather than svg, this will be 
+  much more flexible
 
 # How to help
 Feel free to use this code according to the GNU license.
