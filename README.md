@@ -44,7 +44,9 @@ time soon.
 * Code sharing support? (the original had this but I didn't think it was that
 usefull honestly)
 * Create a custom renderer in html/css/js rather than svg, this will be 
-  much more flexible
+  much more flexible.
+  I also have the idea to use a circular rendere in this case, where 1992 
+  will be the center and the farther you go out the farther in time you go.
 * Add support for releases (giving another line type for rolling rleases)
 
 # How to help
