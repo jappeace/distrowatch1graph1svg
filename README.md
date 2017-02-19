@@ -45,6 +45,7 @@ time soon.
 usefull honestly)
 * Create a custom renderer in html/css/js rather than svg, this will be 
   much more flexible
+* Add support for releases (giving another line type for rolling rleases)
 
 # How to help
 Feel free to use this code according to the GNU license.
