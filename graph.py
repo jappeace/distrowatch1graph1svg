@@ -21,15 +21,20 @@ sound, We expect a tree (mostly, maybe some code sharings but that's not
 implemented now)
 """
 
-import json 
+import json
 import strings
 from correct import fixrelations, correct
 
+
 def to_graph(son):
+    """From flat json to python graph"""
+
     def dumps(item):
         return json.dumps(item, indent=4)
+
     def printjson(item):
         print(dumps(item))
+
     categories = json.loads(son)
     categories = [correct(fixrelations(i)) for i in categories]
     independents = filter(
@@ -57,24 +62,28 @@ def to_graph(son):
         current = bases[0]
         if len(parents) == 0:
             try:
-                parents.insert(0,independents[current])
+                parents.insert(0, independents[current])
             except KeyError as e:
                 printjson(child)
                 raise e
             return findparents(child, bases[1:], parents)
         base = next(
-            (x for x in parents[0][strings.children] if x[strings.name] == current),
+            (x
+             for x
+             in parents[0][strings.children]
+             if x[strings.name] == current),
             None
         )
-        if base == None:
-            if not current in independents:
+        if base is None:
+            if current not in independents:
                 if current == child[strings.name]:
-                    # ubuntu dependson ubuntu... yes distrowatch thats just bullshit
-                    return findparents(child,[], parents)
+                    # ubuntu dependson ubuntu... yes distrowatch that's just
+                    # silly
+                    return findparents(child, [], parents)
                 # the base is not added yet to the structure
                 # lets just ignore this one for now.
                 return False
-            parents.insert(0,independents[current])
+            parents.insert(0, independents[current])
             return findparents(child, bases[1:], parents)
         parents[0] = base
         return findparents(child, bases[1:], parents)
@@ -85,12 +94,13 @@ def to_graph(son):
             current = collection[0]
             basedstr = current[strings.based]
             bases = basedstr.split(",")
-            if not findparents(current,bases,[]):
+            if not findparents(current, bases, []):
                 counter += 1
                 if counter > len(collection) * 10:
                     printjson(list(collection))
                     raise Exception(
-                        "Made five full circles in the deque, the data is just invalid, deque size %i " % counter
+                        "Made five full circles in the deque, the data is " +
+                        "just invalid, deque size %i " % counter
                     )
                 collection.append(current)
             else:
@@ -99,6 +109,9 @@ def to_graph(son):
         return collection
 
     from collections import deque
-    notindependents = deque(filter(lambda x: not x[strings.based] == strings.independend, categories))
+    notindependents = deque(filter(
+        lambda x: not x[strings.based] == strings.independend,
+        categories
+    ))
     deepen(notindependents)
     return dumps(list(map(lambda item: item[1], independents.items())))
