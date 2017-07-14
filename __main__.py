@@ -29,6 +29,7 @@ import os
 import argparse
 import json
 
+
 def main():
     parser = argparse.ArgumentParser(
         description=""" Distrograph Copyright (C) 2016 Jappie Klooster
