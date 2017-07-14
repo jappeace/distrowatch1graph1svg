@@ -17,13 +17,15 @@
 """
 This file does the data collection from distrowatch (or any other site with
 a similar html structure)
-""" 
+"""
 import strings
 
 from requests import Session
 from bs4 import BeautifulSoup
 from re import match
 from shutil import copyfileobj
+
+
 def jsondumps(item):
     import json
     return json.dumps(item, indent=4)
@@ -31,7 +33,7 @@ def jsondumps(item):
 
 def fetch_details(arguments):
     """
-    Fetch the details of a distrobution, can be executed as a seperate 
+    Fetch the details of a distrobution, can be executed as a seperate
     process, IO bound and blocking.
     """
     (baseurl, distrobution) = arguments
@@ -43,30 +45,31 @@ def fetch_details(arguments):
 
     print("downloading and parsing %s" % distrobution.a.text)
     aname = distrobution.a.get("href")
-    hname =distrobution.a.text 
+    hname = distrobution.a.text
     aname = hname.split(' ')[0].lower() if aname == '' else aname
     link = "%s/%s" % (baseurl, aname)
     distrosoup = BeautifulSoup(session.get(link).text)
     structure = {
-        strings.name:aname,
-        "Human Name":hname ,
-        "Link":link
+        strings.name: aname,
+        "Human Name": hname,
+        "Link": link
     }
     anchor = distrosoup.find('ul')
     for attribute in anchor.find_all('li'):
         # I'll be happy if this works
         name = attribute.b.extract().text[:-1]
-        structure[name] = attribute.text[1:].replace("\\n","")
-    #find all dates and do some data sanitation if neccisarry
+        structure[name] = attribute.text[1:].replace("\\n", "")
+
     def sanatizeDate(element):
+        """find all dates and do some data sanitation if neccisarry"""
         date = element.text
-        if not "-" in date:
-            date += "-XX-XX" # note this already exist in distrowatch input
-        return date.replace("XX","01")
+        if "-" not in date:
+            date += "-XX-XX"  # note this already exist in distrowatch input
+        return date.replace("XX", "01")
 
     structure[strings.dates] = list(map(
         sanatizeDate,
-        distrosoup.find_all("td",class_="Date")
+        distrosoup.find_all("td", class_="Date")
     ))
 
     url = "%s/%s" % (baseurl, anchor.parent.find_all('img')[-1]['src'])
@@ -79,10 +82,11 @@ def fetch_details(arguments):
     structure[strings.image] = image_name
     return jsondumps(structure)
 
+
 def fetch_dist_list_from(baseurl, search_options):
     # for debugging...
-    def tohtml(lines, outFile = "output.html"):
-        with open("out/%s"%outFile, "w", encoding='utf8') as f:
+    def tohtml(lines, outFile="output.html"):
+        with open("out/%s" % outFile, "w", encoding='utf8') as f:
             f.writelines(lines)
 
     session = Session()
@@ -92,6 +96,8 @@ def fetch_dist_list_from(baseurl, search_options):
     def tagfilter(tag):
         return tag.name == "b" and match("[0-9]+\.", tag.text)
 
+    # TODO Why are we creating THIS as a json string here.
+    # Why not jsut return a python array
     result = "["
     # some missing root elements
     godfathers = [
@@ -99,18 +105,23 @@ def fetch_dist_list_from(baseurl, search_options):
     ]
     for godfather in godfathers:
         result += jsondumps({
-            strings.name:godfather[0],
-            strings.based:strings.independend,
-            strings.dates:[godfather[1]],
-            strings.status:strings.active,
-            strings.image:""
-        })+","
+            strings.name: godfather[0],
+            strings.based: strings.independend,
+            strings.dates: [godfather[1]],
+            strings.status: strings.active,
+            strings.image: ""
+        }) + ","
 
     from multiprocessing import Pool
-    pool = Pool(8) # sub interpreters to use
+    pool = Pool(8)  # sub interpreters to use
     foundDistributions = searchSoup.find_all(tagfilter)
     result += ",".join(pool.map(
         fetch_details,
-        zip([baseurl for x in foundDistributions], [str(x) for x in foundDistributions])
+        zip([baseurl
+             for x
+             in foundDistributions],
+            [str(x)
+             for x
+             in foundDistributions])
     ))
     return result + "]"
