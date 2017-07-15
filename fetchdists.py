@@ -56,7 +56,9 @@ def fetch_details(arguments):
     }
     anchor = distrosoup.find('ul')
     for attribute in anchor.find_all('li'):
-        # I'll be happy if this works
+        if attribute.b is None:
+            # no name, probably not a distro
+            continue
         name = attribute.b.extract().text[:-1]
         structure[name] = attribute.text[1:].replace("\\n", "")
 

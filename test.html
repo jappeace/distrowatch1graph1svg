@@ -1,0 +1,59 @@
+<!--
+     Thanks to:
+     - question: https://stackoverflow.com/questions/16561772/creating-a-round-list-in-css-for-a-round-menubar
+     - example: http://www.cssplay.co.uk/menus/cssplay-round-and-round.html
+-->
+<html>
+    <head>
+        <title>Circle menu test</title>
+       <style>
+       *{
+            padding:0
+            margin:0
+        }
+        .holder{
+           position:relative
+        }
+        .rotate li:nth-child(1){
+            transform: rotate(60deg) translatey(10px);
+        }
+        .rotate li:nth-child(2){
+            transform: rotate(120deg) translatey(10px);
+        }
+        .rotate li:nth-child(3){
+            transform: rotate(180deg) translatey(10px);
+        }
+        .rotate li:nth-child(4){
+            transform: rotate(240deg) translatey(10px);
+        }
+        .rotate li:nth-child(5){
+            transform: rotate(300deg) translatey(10px);
+        }
+       </style>
+       
+    </head>
+    <body>
+        magler
+        <div class="holder">
+        <ul>
+            <li>Center
+                <ul class="rotate">
+                    <li> one </li>
+                    <li> two </li>
+                    <li> three
+                        <ul>
+                            <li>Jip</li>
+                            <li>jap</li>
+                            <li>Jop</li>
+                            <li>lop</li>
+                        </ul>
+                    </li>
+                    <li> four </li>
+                    <li> five </li>
+                </ul>
+            </li>
+        </ul>
+        </div>
+        maglar
+    </body>
+</html>
