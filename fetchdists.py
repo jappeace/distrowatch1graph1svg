@@ -41,7 +41,12 @@ def fetch_details(arguments):
     # since this is subprocess space we want to reconstruct these based on
     # the passed primitives
     distrobution = BeautifulSoup(distrobution)
-    session = Session()
+    session = Session(
+        headers={
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/72.0',
+        }
+    )
 
     print("downloading and parsing %s" % distrobution.a.text)
     aname = distrobution.a.get("href")
