@@ -22,7 +22,7 @@ import strings
 import re
 
 datafixes = [
-    (re.compile("\((.*?)\)"), ""), # remove brackets with details
+    (re.compile(r"\((.*?)\)"), ""), # remove brackets with details
 
     #spelling
     (re.compile("^$"), strings.independend),
