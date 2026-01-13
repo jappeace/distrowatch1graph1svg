@@ -25,6 +25,7 @@ from bs4 import BeautifulSoup
 from re import match
 from shutil import copyfileobj
 
+req_headers = {'User-Agent': 'distrowatch1graph1svg 1.0'}
 
 def jsondumps(item):
     import json
@@ -48,13 +49,13 @@ def fetch_details(arguments):
     hname = distrobution.a.text
     aname = hname.split(' ')[0].lower() if aname == '' else aname
     link = "%s/%s" % (baseurl, aname)
-    distrosoup = BeautifulSoup(session.get(link).text)
+    distrosoup = BeautifulSoup(session.get(link, headers=req_headers).text)
     structure = {
         strings.name: aname,
         "Human Name": hname,
         "Link": link
     }
-    anchor = distrosoup.find('ul')
+    anchor = distrosoup.find('td', attrs={"class": "TablesTitle"}).find('ul')
     for attribute in anchor.find_all('li'):
         if attribute.b is None:
             # no name, probably not a distro
@@ -76,7 +77,7 @@ def fetch_details(arguments):
 
     url = "%s/%s" % (baseurl, anchor.parent.find_all('img')[-1]['src'])
     print("using image: %s" % url)
-    image = session.get(url, stream=True)
+    image = session.get(url, headers=req_headers, stream=True)
     image_name = "%s.png" % aname
     with open(image_name, 'wb') as ifile:
         image.raw.decode_content = True
@@ -92,11 +93,11 @@ def fetch_dist_list_from(baseurl, search_options):
             f.writelines(lines)
 
     session = Session()
-    website = session.get('%s/search.php?%s' % (baseurl, search_options)).text
+    website = session.get('%s/search.php?%s' % (baseurl, search_options), headers=req_headers).text
     searchSoup = BeautifulSoup(website)
 
     def tagfilter(tag):
-        return tag.name == "b" and match("[0-9]+\.", tag.text)
+        return tag.name == "b" and match(r"[0-9]+\.", tag.text)
 
     # TODO Why are we creating THIS as a json string here.
     # Why not jsut return a python array
