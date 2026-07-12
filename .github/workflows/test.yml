@@ -1,0 +1,26 @@
+name: "Test"
+on:
+  pull_request:
+  push:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: cachix/install-nix-action@v31
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+    - name: Nix store cache
+      uses: nix-community/cache-nix-action@v6
+      with:
+        primary-key: nix-${{ hashFiles('npins/sources.json', 'nix/*.nix') }}
+        restore-prefixes-first-match: nix-
+    # All the work lives in nix/ci.nix so it reproduces locally; CI just calls it.
+    - run: nix-build nix/ci.nix -A checks
+    - name: Cancel workflow on failure
+      if: failure()
+      continue-on-error: true
+      run: gh run cancel ${{ github.run_id }}
+      env:
+        GH_TOKEN: ${{ github.token }}
