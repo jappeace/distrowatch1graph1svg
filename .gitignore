@@ -8,3 +8,7 @@
 out
 
 __pycache__
+
+# nix build output symlinks
+result
+result-*

@@ -62,6 +62,9 @@ datafixes = [
     (re.compile("^debian,linspire$"), "debian,ubuntu,linspire"),
     # debian clusterfuck
     (re.compile("^debian,ubuntu,knoppix$"), "debian,ubuntu,debian,knoppix"),
+    # devuan forked debian, distrowatch lists distros as based on devuan
+    # directly without tracing back to the independent debian root
+    (re.compile("^devuan"), "debian,devuan"),
 
     # distrowatch didn't want to put up with the numbers
     (re.compile("m0n0wall"), "monowall"),
